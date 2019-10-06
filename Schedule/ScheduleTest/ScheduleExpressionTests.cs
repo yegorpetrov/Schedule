@@ -1,4 +1,5 @@
-﻿using Schedule;
+﻿using Schedule.Expressions;
+using Schedule.Parser;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -11,13 +12,13 @@ namespace ScheduleTest
     {
         public DateTime ScheduleNext(string expression, DateTime baseTime)
         {
-            new ScheduleExpression(expression).Find(baseTime, ref baseTime, true);
+            new ScheduleParser().ParseSchedule(expression).Find(baseTime, ref baseTime, true);
             return baseTime;
         }
 
         public DateTime SchedulePrev(string expression, DateTime baseTime)
         {
-            new ScheduleExpression(expression).Find(baseTime, ref baseTime, false);
+            new ScheduleParser().ParseSchedule(expression).Find(baseTime, ref baseTime, false);
             return baseTime;
         }
 
@@ -28,6 +29,15 @@ namespace ScheduleTest
             var b = new DateTime(2019, 10, 2, 10, 02, 46);
 
             Assert.Equal(b, ScheduleNext("*.*.* * *:*:46.000", a));
+        }
+
+        [Fact]
+        public void NextSecondsNoDayOfWeek()
+        {
+            var a = new DateTime(2019, 10, 2, 10, 02, 45);
+            var b = new DateTime(2019, 10, 2, 10, 02, 46);
+
+            Assert.Equal(b, ScheduleNext("*.*.* *:*:46.000", a));
         }
 
         [Fact]

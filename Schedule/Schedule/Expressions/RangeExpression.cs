@@ -1,12 +1,21 @@
 ﻿using System;
 using System.Linq;
 
-namespace Schedule
+namespace Schedule.Expressions
 {
     public class RangeExpression : IExpression<int>
     {
         private readonly int _min, _max, _step, _lastIndex;
 
+        public RangeExpression(int min, int max, int step)
+        {
+            _min = min;
+            _max = max;
+            _step = step;
+            _lastIndex = (_max - _min) / _step;
+        }
+
+        [Obsolete]
         public RangeExpression(string expression)
         {
             var split0 = expression.Split('/');

@@ -1,0 +1,13 @@
+﻿This document is descriptive only. Do not use as a formal definition
+
+Schedule ::= Date, WS, [DayOfWeek], WS, Time
+Date ::= Year, '.', Month, '.', Day
+Year ::= List
+Month ::= List
+Day ::= List
+DayOfWeek ::= List
+Time ::= List, ':', List, ':', List ['.' List]
+List ::= Range {',', Range}
+Range ::= ('*' | (Number, '-', Number)), ['/' Number]
+Number ::= Digit {Digit}
+Digit ::= '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9'
