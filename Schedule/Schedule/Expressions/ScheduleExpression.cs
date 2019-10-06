@@ -1,74 +1,34 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
-using System.Text;
-using System.Text.RegularExpressions;
 
-namespace Schedule
+namespace Schedule.Expressions
 {
-    public class ScheduleExpression : IExpression<DateTime>
+    public partial class ScheduleExpression : IExpression<DateTime>
     {
         static readonly Calendar _calendar = CultureInfo.InvariantCulture.Calendar;
 
-        //const string L = @"([*0-9,\/-]+)";
+        private readonly IExpression<int>
+            _yyyyExp, _mmExp, _ddExp, _dowExp,
+            _hhExp, _minExp, _ssExp, _fffExp;
 
-        //static readonly Regex _regex = new Regex(
-        //    $@"({L}\.{L}\.{L})? {L}? ({L}\:{L}\:{L}(\.{L})?)");
-
-        private readonly IExpression<int> yyyyExp, mmExp, ddExp, dowExp, hhExp, minExp, ssExp, fffExp;
-
-        public ScheduleExpression(string expression)
+        public ScheduleExpression(
+            IExpression<int> yyyyExp,
+            IExpression<int> mmExp,
+            IExpression<int> ddExp,
+            IExpression<int> dowExp,
+            IExpression<int> hhExp,
+            IExpression<int> minExp,
+            IExpression<int> ssExp,
+            IExpression<int> fffExp)
         {
-            var datePartSplit = expression.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-
-            (yyyyExp, mmExp, ddExp) = ParseDatePattern(datePartSplit.FirstOrDefault(p => p.Contains('.')));
-            dowExp = ParseDayOfWeekPattern(datePartSplit.FirstOrDefault(p => !p.Contains('.') && !p.Contains(':')));
-            (hhExp, minExp, ssExp, fffExp) = ParseTimePattern(datePartSplit.FirstOrDefault(p => p.Contains(':')));
-        }
-
-        private static (
-            ListExpression year,
-            ListExpression month,
-            ListExpression day)
-            ParseDatePattern(string datePattern)
-        {
-            var split = (datePattern ?? "*.*.*").Split('.');
-
-            return (
-                Unwild(split[0], 2000, 2100),
-                Unwild(split[1], 1, 12),
-                Unwild(split[2], 1, 31 + 1));
-        }
-
-        private static ListExpression ParseDayOfWeekPattern(string dayOfWeekPattern)
-        {
-            return Unwild(dayOfWeekPattern ?? "*", 0, 6);
-        }
-
-        private static (
-            ListExpression hour,
-            ListExpression minute,
-            ListExpression second,
-            ListExpression fractions)
-            ParseTimePattern(string timePattern)
-        {
-
-            var split = (timePattern ?? "*:*:*.0").Split(':', '.');
-
-            return (
-                Unwild(split[0], 0, 23),
-                Unwild(split[1], 0, 59),
-                Unwild(split[2], 0, 59),
-                Unwild(split[3], 0, 999));
-        }
-
-        /// <summary>
-        /// Wildcard lowering
-        /// </summary>
-        private static ListExpression Unwild(string pattern, int min, int max)
-        {
-            return new ListExpression(pattern.Replace("*", $"{min}-{max}"));
+            _yyyyExp = yyyyExp;
+            _mmExp = mmExp;
+            _ddExp = ddExp;
+            _dowExp = dowExp;
+            _hhExp = hhExp;
+            _minExp = minExp;
+            _ssExp = ssExp;
+            _fffExp = fffExp;
         }
 
         /// <summary>
@@ -77,13 +37,13 @@ namespace Schedule
         [Flags]
         private enum DT
         {
-            Ms =    1 << 0,
-            Sec =   1 << 1,
-            Min =   1 << 2,
-            Hour =  1 << 3,
-            Day =   1 << 4,
+            Ms = 1 << 0,
+            Sec = 1 << 1,
+            Min = 1 << 2,
+            Hour = 1 << 3,
+            Day = 1 << 4,
             Month = 1 << 5,
-            Year =  1 << 6
+            Year = 1 << 6
         }
 
         class Stepper
@@ -129,25 +89,25 @@ namespace Schedule
             // Resets each datetime component to its minimum
             void Reset(DT components)
             {
-                if (components.HasFlag(DT.Ms)) fffExp.Find(stepper.Init, ref ms, forward);
-                if (components.HasFlag(DT.Sec)) ssExp.Find(stepper.Init, ref second, forward);
-                if (components.HasFlag(DT.Min)) minExp.Find(stepper.Init, ref minute, forward);
-                if (components.HasFlag(DT.Hour)) hhExp.Find(stepper.Init, ref hour, forward);
-                if (components.HasFlag(DT.Day)) ddExp.Find(stepper.Init, ref day, forward);
-                if (components.HasFlag(DT.Month)) mmExp.Find(stepper.Init, ref month, forward);
-                if (components.HasFlag(DT.Year)) yyyyExp.Find(stepper.Init, ref year, forward);
+                if (components.HasFlag(DT.Ms)) _fffExp.Find(stepper.Init, ref ms, forward);
+                if (components.HasFlag(DT.Sec)) _ssExp.Find(stepper.Init, ref second, forward);
+                if (components.HasFlag(DT.Min)) _minExp.Find(stepper.Init, ref minute, forward);
+                if (components.HasFlag(DT.Hour)) _hhExp.Find(stepper.Init, ref hour, forward);
+                if (components.HasFlag(DT.Day)) _ddExp.Find(stepper.Init, ref day, forward);
+                if (components.HasFlag(DT.Month)) _mmExp.Find(stepper.Init, ref month, forward);
+                if (components.HasFlag(DT.Year)) _yyyyExp.Find(stepper.Init, ref year, forward);
             }
 
             // Milliseconds
 
-            if (!fffExp.Find(ms, ref ms, forward))
+            if (!_fffExp.Find(ms, ref ms, forward))
             {
                 second += stepper.Increment;
             }
 
             // Seconds
 
-            if (!ssExp.Find(second, ref second, forward))
+            if (!_ssExp.Find(second, ref second, forward))
             {
                 minute += stepper.Increment;
                 Reset(DT.Ms);
@@ -159,7 +119,7 @@ namespace Schedule
 
             // Minutes
 
-            if (!minExp.Find(minute, ref minute, forward))
+            if (!_minExp.Find(minute, ref minute, forward))
             {
                 hour += stepper.Increment;
                 Reset(DT.Sec | DT.Ms);
@@ -171,7 +131,7 @@ namespace Schedule
 
             // Hours
 
-            if (!hhExp.Find(hour, ref hour, forward))
+            if (!_hhExp.Find(hour, ref hour, forward))
             {
                 day += stepper.Increment;
                 Reset(DT.Min | DT.Sec | DT.Ms);
@@ -185,7 +145,7 @@ namespace Schedule
             {
                 // Days
 
-                if (!ddExp.Find(day, ref day, forward))
+                if (!_ddExp.Find(day, ref day, forward))
                 {
                     month += stepper.Increment;
                     Reset(DT.Hour | DT.Min | DT.Sec | DT.Ms);
@@ -201,7 +161,7 @@ namespace Schedule
 
                 // Months
 
-                if (!mmExp.Find(month, ref month, forward))
+                if (!_mmExp.Find(month, ref month, forward))
                 {
                     year += stepper.Increment;
                     Reset(DT.Day | DT.Hour | DT.Min | DT.Sec | DT.Ms);
@@ -213,7 +173,7 @@ namespace Schedule
 
                 // Years
 
-                if (!yyyyExp.Find(year, ref year, forward))
+                if (!_yyyyExp.Find(year, ref year, forward))
                 {
                     nextOccurance = DateTime.MaxValue;
                     return false;
@@ -241,7 +201,7 @@ namespace Schedule
 
             nextOccurance = new DateTime(year, month, day, hour, minute, second).AddMilliseconds(ms);
 
-            dowExp.Find((int)nextOccurance.DayOfWeek, ref dayOfWeek, forward);
+            _dowExp.Find((int)nextOccurance.DayOfWeek, ref dayOfWeek, forward);
 
             if ((int)nextOccurance.DayOfWeek != dayOfWeek)
             {

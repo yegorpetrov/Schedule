@@ -2,12 +2,18 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Schedule
+namespace Schedule.Expressions
 {
     public class ListExpression : IExpression<int>
     {
         private readonly IEnumerable<IExpression<int>> _elements;
 
+        public ListExpression(IEnumerable<IExpression<int>> elements)
+        {
+            _elements = elements;
+        }
+
+        [Obsolete]
         public ListExpression(string listExpression)
         {
             _elements = listExpression
