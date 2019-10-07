@@ -1,3 +1,6 @@
+using Schedule;
+using Schedule.Expressions;
+using Schedule.Parser;
 using System;
 
 namespace Test
@@ -8,12 +11,14 @@ namespace Test
 	/// </summary>
 	public class Schedule
 	{
+        private readonly ScheduleExpression _schedule;
+        private readonly string _scheduleString;
 
-		/// <summary>
-		/// Создает пустой экземпляр, который будет соответствовать
-		/// расписанию типа "*.*.* * *:*:*.*" (раз в 1 мс).
-		/// </summary>
-		public Schedule()
+        /// <summary>
+        /// Создает пустой экземпляр, который будет соответствовать
+        /// расписанию типа "*.*.* * *:*:*.*" (раз в 1 мс).
+        /// </summary>
+        public Schedule()
 		{
 		}
 
@@ -57,7 +62,9 @@ namespace Test
 		/// </param>
 		public Schedule(string scheduleString)
 		{
-		}
+            _schedule = new ScheduleParser().ParseSchedule(scheduleString);
+            _scheduleString = scheduleString;
+        }
 
 		/// <summary>
 		/// Возвращает следующий ближайший к заданному времени момент в расписании или
@@ -67,7 +74,16 @@ namespace Test
 		/// <returns>Ближайший момент времени в расписании</returns>
 		public DateTime NearestEvent(DateTime t1)
 		{
-            throw new NotImplementedException();
+            DateTime result = default;
+
+            if (_schedule.Find(t1, ref result, true))
+            {
+                return result;
+            }
+            else
+            {
+                throw new NoScheduleContinutationFoundException(_scheduleString);
+            }
 		}
 
 		/// <summary>
@@ -78,7 +94,16 @@ namespace Test
 		/// <returns>Ближайший момент времени в расписании</returns>
 		public DateTime NearestPrevEvent(DateTime t1)
 		{
-            throw new NotImplementedException();
+            DateTime result = default;
+
+            if (_schedule.Find(t1, ref result, false))
+            {
+                return result;
+            }
+            else
+            {
+                throw new NoScheduleContinutationFoundException(_scheduleString);
+            }
         }
 
         /// <summary>
@@ -98,7 +123,7 @@ namespace Test
 		/// <returns>Предыдущий момент времени в расписании</returns>
 		public DateTime PrevEvent(DateTime t1)
 		{
-            return PrevEvent(t1.AddMilliseconds(-1));
+            return NearestPrevEvent(t1.AddMilliseconds(-1));
         }
 
 	}

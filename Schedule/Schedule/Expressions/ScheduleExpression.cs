@@ -86,6 +86,11 @@ namespace Schedule.Expressions
                 month = baseTime.Month,
                 year = baseTime.Year;
 
+            DateTime GetCurrentResult()
+            {
+                return new DateTime(year, month, day, hour, minute, second).AddMilliseconds(ms);
+            }
+
             // Resets each datetime component to its minimum
             void Reset(DT components)
             {
@@ -183,9 +188,15 @@ namespace Schedule.Expressions
                     Reset(DT.Month | DT.Day | DT.Hour | DT.Min | DT.Sec | DT.Ms);
                 }
 
-                if (day == 32)
+                if (day == 32) // patch to the end of month
                 {
                     day = _calendar.GetDaysInMonth(year, month);
+
+                    // but make sure we don't move in the opposite direction
+                    if ((forward && GetCurrentResult() < baseTime) || (!forward && GetCurrentResult() > baseTime))
+                    {
+                        day = 32;
+                    }
                 }
 
                 // Try next month if the current one overflows
@@ -195,11 +206,14 @@ namespace Schedule.Expressions
                     day = int.MaxValue - stepper.Init;
                     month += stepper.Increment;
                 }
-                else break;
+                else
+                {
+                    break;
+                }
 
             } while (true);
 
-            nextOccurance = new DateTime(year, month, day, hour, minute, second).AddMilliseconds(ms);
+            nextOccurance = GetCurrentResult();
 
             _dowExp.Find((int)nextOccurance.DayOfWeek, ref dayOfWeek, forward);
 

@@ -46,7 +46,7 @@ namespace Schedule.Expressions
 
             if (stepIndex >= _lastIndex) // Cap from the top
             {
-                @out = _max;
+                @out = _lastIndex * _step + _min;
                 // Going back <<<, we're expected to be ahead
                 return stepper(halfstep) < halfstep || @out == @base;
             }

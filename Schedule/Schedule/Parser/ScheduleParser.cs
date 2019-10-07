@@ -6,6 +6,9 @@ using System.Text;
 
 namespace Schedule.Parser
 {
+    /// <summary>
+    /// A naive RD parser for schedule expressions
+    /// </summary>
     public class ScheduleParser
     {
         private bool Accept(IEnumerator<Token> tokens, Token.Kind tkind)
@@ -31,16 +34,29 @@ namespace Schedule.Parser
 
             tokens.MoveNext();
 
-            var year = List(tokens).ToArray();
+            IEnumerable<RangeNode>
+                year = new[] { new RangeNode(2000, 2100, 1) },
+                month = new[] { new RangeNode(1, 12, 1) },
+                day = new[] { new RangeNode(1, 32, 1) },
+                dayOfWeek = new[] { new RangeNode(0, 6, 1) },
+                hours = new[] { new RangeNode(0, 23, 1) },
+                minutes = new[] { new RangeNode(0, 59, 1) },
+                seconds = new[] { new RangeNode(0, 59, 1) },
+                fractions = new[] { new RangeNode(0, 999, 1) };
+
+            year = hours = List(tokens).ToArray();
+            if (Accept(tokens, Token.Kind.Colon))
+            {
+                year = new[] { new RangeNode(2000, 2100, 1) };
+                goto Minutes;
+            }
             Expect(tokens, Token.Kind.Dot);
-            var month = List(tokens).ToArray();
+            month = List(tokens).ToArray();
             Expect(tokens, Token.Kind.Dot);
-            var day = List(tokens).ToArray();
+            day = List(tokens).ToArray();
 
             Expect(tokens, Token.Kind.Whitespace);
             
-            IEnumerable<RangeNode> dayOfWeek, hours;
-
             dayOfWeek = hours = List(tokens).ToArray();
             
             if (Accept(tokens, Token.Kind.Colon))
@@ -54,11 +70,10 @@ namespace Schedule.Parser
                 Expect(tokens, Token.Kind.Colon);
             }
 
-            var minutes = List(tokens).ToArray();
+        Minutes:
+            minutes = List(tokens).ToArray();
             Expect(tokens, Token.Kind.Colon);
-            var seconds = List(tokens).ToArray();
-
-            IEnumerable<RangeNode> fractions;
+            seconds = List(tokens).ToArray();
 
             if (Accept(tokens, Token.Kind.Dot))
             {

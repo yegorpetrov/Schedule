@@ -54,19 +54,19 @@ namespace ScheduleTest
             Assert.Equal(16, ListNext("1,2,3-5,10-20/3", 14));
             Assert.Equal(16, ListNext("1,2,3-5,10-20/3", 15));
             Assert.Equal(16, ListNext("1,2,3-5,10-20/3", 16));
-            Assert.Equal(20, ListNext("1,2,3-5,10-20/3", 17));
-            Assert.Equal(20, ListNext("1,2,3-5,10-20/3", 18));
-            Assert.Equal(20, ListNext("1,2,3-5,10-20/3", 19));
-            Assert.Equal(20, ListNext("1,2,3-5,10-20/3", 20));
-            Assert.Equal(20, ListNext("1,2,3-5,10-20/3", 21));
+            Assert.Equal(19, ListNext("1,2,3-5,10-20/3", 17));
+            Assert.Equal(19, ListNext("1,2,3-5,10-20/3", 18));
+            Assert.Equal(19, ListNext("1,2,3-5,10-20/3", 19));
+            Assert.Equal(19, ListNext("1,2,3-5,10-20/3", 20));
+            Assert.Equal(19, ListNext("1,2,3-5,10-20/3", 21));
         }
 
         [Fact]
         public void MultiRangeListWorksBackward()
         {
-            Assert.Equal(20, ListPrevious("1,2,3-5,10-20/3", 21));
-            Assert.Equal(20, ListPrevious("1,2,3-5,10-20/3", 20));
-            Assert.Equal(20, ListPrevious("1,2,3-5,10-20/3", 19));
+            Assert.Equal(19, ListPrevious("1,2,3-5,10-20/3", 21));
+            Assert.Equal(19, ListPrevious("1,2,3-5,10-20/3", 20));
+            Assert.Equal(19, ListPrevious("1,2,3-5,10-20/3", 19));
             Assert.Equal(16, ListPrevious("1,2,3-5,10-20/3", 18));
             Assert.Equal(16, ListPrevious("1,2,3-5,10-20/3", 17));
             Assert.Equal(16, ListPrevious("1,2,3-5,10-20/3", 16));
