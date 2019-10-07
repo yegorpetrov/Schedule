@@ -15,6 +15,18 @@ namespace ScheduleTest
     public class ScheduleTests
     {
         [Fact]
+        public void EmptySchedule()
+        {
+            var schedule = new SC();
+
+            var a = new DateTime(2019, 1, 1);
+            var b = a.AddMilliseconds(1);
+
+            Assert.Equal(b, schedule.NextEvent(a));
+            Assert.Equal(a, schedule.PrevEvent(b));
+        }
+
+        [Fact]
         public void Only10SharpOnWorkDaysInSeptemberOnOddDates()
         {
             var schedule = new SC("*.9.*/2 1-5 10:00:00.000");
